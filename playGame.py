@@ -12,9 +12,9 @@ from pygame.locals import *
 class Player(pygame.sprite.Sprite):
 	def __init__(self):
 		super(Player, self).__init__()
-		self.surf = pygame.Surface((75, 25))
-		self.surf.fill((0, 255, 0)) #绿色
-		self.rect = self.surf.get_rect()
+		self.image = pygame.image.load('jet.png').convert()
+		self.image.set_colorkey((255, 255, 255), RLEACCEL)
+		self.rect = self.image.get_rect()
 
 	def update(self, pressed_keys):
 		if pressed_keys[K_UP]:
@@ -39,16 +39,17 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
 	def __init__(self):
 		super(Enemy, self).__init__()
-		self.surf = pygame.Surface((20, 10))
-		self.surf.fill((255, 0, 0))#红色
-		self.rect = self.surf.get_rect(center = (820, random.randint(0, 600)))
-		self.speed = random.randint(5, 20)
+		self.image = pygame.image.load('missile.png').convert()
+		self.init_position = [10, 100, 200, 300, 400, 500, 580]
+		self.image.set_colorkey((255, 255, 255), RLEACCEL)
+		self.rect = self.image.get_rect(center = (820, self.init_position[random.randint(0, 6)]))
+		# self.speed = random.randint(1, 2)
+		self.speed = 1
 
 	def update(self):
 		self.rect.move_ip(-self.speed, 0)
 		if self.rect.right < 0:
 			self.kill()
-
 
 # initialize pygame
 pygame.init()
@@ -63,7 +64,7 @@ background.fill((135, 206, 250))
 
 # Create a custom event for adding a new enemy.
 ADDENEMY = pygame.USEREVENT + 1
-pygame.time.set_timer(ADDENEMY, 250)
+pygame.time.set_timer(ADDENEMY, 500)
 ADDCLOUD = pygame.USEREVENT + 2
 pygame.time.set_timer(ADDCLOUD, 1000)
 
@@ -96,10 +97,12 @@ while running:
 	enemies.update()
 
 	for entity in all_sprites:
-		screen.blit(entity.surf, entity.rect)
+		screen.blit(entity.image, entity.rect)
 
 	if pygame.sprite.spritecollideany(player, enemies):
+		print "Game over"
 		player.kill()
+		running = False
 
 	#将两次flip之间的修改更新到整个屏幕
 	pygame.display.flip()
