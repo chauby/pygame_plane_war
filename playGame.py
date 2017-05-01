@@ -3,6 +3,7 @@
 import pygame
 import random
 import time
+import os.path
 from datetime import datetime
 
 # import pygame.locals for easier access to key coordinates
@@ -14,6 +15,7 @@ from pygame.font import *
 #定义游戏的屏幕大小
 width = 800
 hight = 600
+main_dir = os.path.split(os.path.abspath(__file__))[0]
 
 #定义Player类
 class Player(pygame.sprite.Sprite):
@@ -109,6 +111,20 @@ class Cloud(pygame.sprite.Sprite):
 		if self.rect.bottom > hight + 50:
 			self.kill()
 
+#定义声音类
+class dummysound:
+	def play(self):pass
+
+def load_sound(file):
+	if not pygame.mixer: return dummysound()
+	file = os.path.join(main_dir, 'data', file)
+	try:
+		sound = pygame.mixer.Sound(file)
+		return sound
+	except pygame.error:
+		print "warning, unnable to load, %s" % file
+	return dummysound()
+
 def show_text(surface_handle, pos, text, color, font_bold = False, font_size = 13, font_italic = False):   
     ''''' 
     Function:文字处理函数 
@@ -175,6 +191,13 @@ bullets = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
+#加入声音
+boom_sound = load_sound('boom.wav')
+shoot_sound = load_sound('shoot.wav')
+if pygame.mixer:
+	music = os.path.join(main_dir, 'data', 'hundouluo.mp3')
+	pygame.mixer.music.load(music)
+	pygame.mixer.music.play(-1)
 
 start_time = datetime.now()
 current_time = start_time
@@ -190,10 +213,11 @@ while running:
 			if event.key == K_ESCAPE:
 				running = False
 			elif event.key == K_SPACE:
-				if len(bullets) == 0:
+				if len(bullets) <= 3:
 					new_bullet = Bullet(player.rect[0] + 32, player.rect[1])
 					bullets.add(new_bullet)
 					all_sprites.add(new_bullet)
+					shoot_sound.play()
 
 		elif event.type == QUIT:
 			running = False
@@ -227,6 +251,7 @@ while running:
 	if pygame.sprite.spritecollideany(player, enemies):
 		player.kill()
 		game_over = True
+		boom_sound.play()
 
 	#击中敌人
 	if pygame.sprite.groupcollide(bullets, enemies, True, True):
