@@ -21,7 +21,7 @@ main_dir = os.path.split(os.path.abspath(__file__))[0]
 class Player(pygame.sprite.Sprite):
 	def __init__(self):
 		super(Player, self).__init__()
-		image = pygame.image.load('GodPlane2.png').convert()
+		image = pygame.image.load('data/GodPlane.png').convert()
 		self.image = pygame.transform.scale(image, (64, 64))
 		self.image.set_colorkey((255, 255, 255), RLEACCEL)
 		self.rect = self.image.get_rect(center = (width/2, 500))#set the plaer's init position
@@ -50,8 +50,8 @@ class Player(pygame.sprite.Sprite):
 class Bullet(pygame.sprite.Sprite):
 	def __init__(self, x_position, y_position):
 		super(Bullet, self).__init__()
-		image = pygame.image.load('biu2.png').convert()
-		self.image = pygame.transform.scale(image, (32, 32))
+		image = pygame.image.load('data/bullet.png').convert()
+		self.image = pygame.transform.scale(image, (16, 16))
 		self.image.set_colorkey((255, 255, 255), RLEACCEL)
 		self.rect = self.image.get_rect(center = (x_position, y_position))
 		self.speed = 2
@@ -65,7 +65,7 @@ class Bullet(pygame.sprite.Sprite):
 class RewardBlood(pygame.sprite.Sprite):
 	def __init__(self):
 		super(RewardBlood, self).__init__()
-		image = pygame.image.load('sphere2.png').convert()
+		image = pygame.image.load('data/sphere.png').convert()
 		self.image = pygame.transform.scale(image, (32, 32))
 		self.image.set_colorkey((255, 255, 255), RLEACCEL)
 		self.rect = self.image.get_rect(center = (random.randint(0, width), 0))
@@ -80,14 +80,20 @@ class RewardBlood(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
 	def __init__(self):
 		super(Enemy, self).__init__()
-		if random.randint(1,2) == 1:
-			image = pygame.image.load('JpPlane2.png').convert()
+		index = random.randint(0, 3)
+		if index == 0:
+			image = pygame.image.load('data/JpPlane.png').convert()
+		elif index == 1:
+			image = pygame.image.load('data/GreenPlane.png').convert()
+		elif index == 2:
+			image = pygame.image.load('data/JitPlane.png').convert()
 		else:
-			image = pygame.image.load('GreenPlane2.png').convert()
+			image = pygame.image.load('data/LXPlane.png').convert()
+
 		self.image = pygame.transform.scale(image, (32, 32))
-		self.init_position = [10, 100, 200, 300, 400, 500, 590]
+		self.init_position = [10, 100, 200, 300, 400, 500, 600, 700, 790]
 		self.image.set_colorkey((255, 255, 255), RLEACCEL)
-		self.rect = self.image.get_rect(center = (self.init_position[random.randint(0, 6)], 0))
+		self.rect = self.image.get_rect(center = (self.init_position[random.randint(0, 8)], 0))
 		# self.speed = random.randint(1, 2)
 		self.speed = 1
 
@@ -101,7 +107,7 @@ class Cloud(pygame.sprite.Sprite):
 	"""docstring for Cloud"""
 	def __init__(self):
 		super(Cloud, self).__init__()
-		self.image = pygame.image.load('cloud.png').convert()
+		self.image = pygame.image.load('data/cloud.png').convert()
 		self.image.set_colorkey((0, 0, 0), RLEACCEL)
 		self.rect = self.image.get_rect(center = (random.randint(0, width), 0))
 		self.speed = random.randint(1,3)
@@ -213,7 +219,7 @@ while running:
 			if event.key == K_ESCAPE:
 				running = False
 			elif event.key == K_SPACE:
-				if len(bullets) <= 3:
+				if (len(bullets) <= 3) and (game_over == False):
 					new_bullet = Bullet(player.rect[0] + 32, player.rect[1])
 					bullets.add(new_bullet)
 					all_sprites.add(new_bullet)
@@ -234,14 +240,13 @@ while running:
 			rewardBloods.add(new_reward)
 			all_sprites.add(new_reward)
 
-	print player.rect
-
 	screen.blit(background, (0, 0))
 	clouds.update()
 	enemies.update()
 	rewardBloods.update()
-	pressed_keys = pygame.key.get_pressed()
-	player.update(pressed_keys)
+	if game_over == False:
+		pressed_keys = pygame.key.get_pressed()
+		player.update(pressed_keys)
 	bullets.update()
 
 	for entity in all_sprites:
@@ -267,7 +272,7 @@ while running:
 		current_time = datetime.now()
 
 	score_text = u"Score: %s" % ((current_time - start_time).seconds + player_get_bloods + player_hit_enemies)
-	show_text(screen, (20, 20), score_text, (0, 0, 200), False, font_size = 28)
+	show_text(screen, (20, 20), score_text, (0, 0, 255), False, font_size = 28)
 
 	#将两次flip之间的修改更新到整个屏幕
 	pygame.display.flip()
