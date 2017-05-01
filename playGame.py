@@ -44,6 +44,21 @@ class Player(pygame.sprite.Sprite):
 		elif self.rect.bottom > hight:
 			self.rect.bottom = hight 
 
+#定义子弹类
+class Bullet(pygame.sprite.Sprite):
+	def __init__(self, x_position, y_position):
+		super(Bullet, self).__init__()
+		image = pygame.image.load('biu2.png').convert()
+		self.image = pygame.transform.scale(image, (32, 32))
+		self.image.set_colorkey((255, 255, 255), RLEACCEL)
+		self.rect = self.image.get_rect(center = (x_position, y_position))
+		self.speed = 2
+
+	def update(self):
+		self.rect.move_ip(0, -self.speed)
+		if self.rect.top < 0:
+			self.kill()
+
 #定义血点奖励类
 class RewardBlood(pygame.sprite.Sprite):
 	def __init__(self):
@@ -145,14 +160,17 @@ pygame.time.set_timer(ADDREWARD, 1000)
 #创建plaer
 player = Player()
 
-#创建敌人
+#创建敌人集合
 enemies = pygame.sprite.Group()
 
-#创建云彩
+#创建云彩集合
 clouds = pygame.sprite.Group()
 
-#创建奖励
+#创建奖励集合
 rewardBloods = pygame.sprite.Group()
+
+#创建子弹集合
+bullets = pygame.sprite.Group()
 
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
@@ -161,6 +179,7 @@ all_sprites.add(player)
 start_time = datetime.now()
 current_time = start_time
 player_get_bloods = 0
+player_hit_enemies = 0
 
 #main loop
 running = True
@@ -170,6 +189,12 @@ while running:
 		if event.type == KEYDOWN:
 			if event.key == K_ESCAPE:
 				running = False
+			elif event.key == K_SPACE:
+				if len(bullets) == 0:
+					new_bullet = Bullet(player.rect[0] + 32, player.rect[1])
+					bullets.add(new_bullet)
+					all_sprites.add(new_bullet)
+
 		elif event.type == QUIT:
 			running = False
 		elif event.type == ADDENEMY:
@@ -185,12 +210,15 @@ while running:
 			rewardBloods.add(new_reward)
 			all_sprites.add(new_reward)
 
+	print player.rect
+
 	screen.blit(background, (0, 0))
 	clouds.update()
 	enemies.update()
 	rewardBloods.update()
 	pressed_keys = pygame.key.get_pressed()
 	player.update(pressed_keys)
+	bullets.update()
 
 	for entity in all_sprites:
 		screen.blit(entity.image, entity.rect)
@@ -199,6 +227,10 @@ while running:
 	if pygame.sprite.spritecollideany(player, enemies):
 		player.kill()
 		game_over = True
+
+	#击中敌人
+	if pygame.sprite.groupcollide(bullets, enemies, True, True):
+		player_hit_enemies += 1
 
 	#获得血液
 	if pygame.sprite.spritecollide(player, rewardBloods, True):
@@ -209,7 +241,7 @@ while running:
 	else:
 		current_time = datetime.now()
 
-	score_text = u"Score: %s" % ((current_time - start_time).seconds + player_get_bloods)
+	score_text = u"Score: %s" % ((current_time - start_time).seconds + player_get_bloods + player_hit_enemies)
 	show_text(screen, (20, 20), score_text, (0, 0, 200), False, font_size = 28)
 
 	#将两次flip之间的修改更新到整个屏幕
