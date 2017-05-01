@@ -1,16 +1,19 @@
 #-*-coding:UTF-8 -*-
 # import the pygame module
 import pygame
-
-# import random for random numbers!
 import random
+import time
+from datetime import datetime
 
 # import pygame.locals for easier access to key coordinates
 from pygame.locals import *
 
+# import font
+from pygame.font import *
+
 #定义游戏的屏幕大小
-width = 1200
-hight = 800
+width = 800
+hight = 600
 
 #定义Player类
 class Player(pygame.sprite.Sprite):
@@ -19,7 +22,7 @@ class Player(pygame.sprite.Sprite):
 		image = pygame.image.load('GodPlane2.png').convert()
 		self.image = pygame.transform.scale(image, (64, 64))
 		self.image.set_colorkey((255, 255, 255), RLEACCEL)
-		self.rect = self.image.get_rect(center = (width/2, 600))#set the plaer's init position
+		self.rect = self.image.get_rect(center = (width/2, 500))#set the plaer's init position
 
 	def update(self, pressed_keys):
 		if pressed_keys[K_UP]:
@@ -65,10 +68,11 @@ class Enemy(pygame.sprite.Sprite):
 		else:
 			image = pygame.image.load('GreenPlane2.png').convert()
 		self.image = pygame.transform.scale(image, (32, 32))
-		self.init_position = [10, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1190]
+		self.init_position = [10, 100, 200, 300, 400, 500, 590]
 		self.image.set_colorkey((255, 255, 255), RLEACCEL)
-		self.rect = self.image.get_rect(center = (self.init_position[random.randint(0, 12)], 0))
-		self.speed = random.randint(1, 2)
+		self.rect = self.image.get_rect(center = (self.init_position[random.randint(0, 6)], 0))
+		# self.speed = random.randint(1, 2)
+		self.speed = 1
 
 	def update(self):
 		self.rect.move_ip(0, self.speed)
@@ -87,8 +91,37 @@ class Cloud(pygame.sprite.Sprite):
 
 	def update(self):
 		self.rect.move_ip(0, self.speed)
-		if self.rect.bottom > hight:
+		if self.rect.bottom > hight + 50:
 			self.kill()
+
+def show_text(surface_handle, pos, text, color, font_bold = False, font_size = 13, font_italic = False):   
+    ''''' 
+    Function:文字处理函数 
+    Input：surface_handle：surface句柄 
+           pos：文字显示位置 
+           color:文字颜色 
+           font_bold:是否加粗 
+           font_size:字体大小 
+           font_italic:是否斜体 
+    Output: NONE 
+    author: socrates 
+    blog:http://blog.csdn.net/dyx1024 
+    date:2012-04-15 
+    '''         
+    #获取系统字体，并设置文字大小  
+    cur_font = pygame.font.SysFont("宋体", font_size)  
+      
+    #设置是否加粗属性  
+    cur_font.set_bold(font_bold)  
+      
+    #设置是否斜体属性  
+    cur_font.set_italic(font_italic)  
+      
+    #设置文字内容  
+    text_fmt = cur_font.render(text, 1, color)  
+      
+    #绘制文字  
+    surface_handle.blit(text_fmt, pos)   
 
 # initialize pygame
 pygame.init()
@@ -124,8 +157,14 @@ rewardBloods = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
+
+start_time = datetime.now()
+current_time = start_time
+player_get_bloods = 0
+
 #main loop
 running = True
+game_over = False
 while running:
 	for event in pygame.event.get():
 		if event.type == KEYDOWN:
@@ -156,10 +195,22 @@ while running:
 	for entity in all_sprites:
 		screen.blit(entity.image, entity.rect)
 
+	#遇到敌人
 	if pygame.sprite.spritecollideany(player, enemies):
 		player.kill()
-		running = False
-		print "Game over"
+		game_over = True
+
+	#获得血液
+	if pygame.sprite.spritecollide(player, rewardBloods, True):
+		player_get_bloods += 1
+
+	if game_over == True:
+		show_text(screen, (width/2 - 230, hight/2 - 100), "GAME OVER", (255, 0, 0), False, font_size = 100)
+	else:
+		current_time = datetime.now()
+
+	score_text = u"Score: %s" % ((current_time - start_time).seconds + player_get_bloods)
+	show_text(screen, (20, 20), score_text, (0, 0, 200), False, font_size = 28)
 
 	#将两次flip之间的修改更新到整个屏幕
 	pygame.display.flip()
