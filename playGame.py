@@ -178,6 +178,8 @@ ADDCLOUD = pygame.USEREVENT + 2
 pygame.time.set_timer(ADDCLOUD, 1000)
 ADDREWARD = pygame.USEREVENT + 3
 pygame.time.set_timer(ADDREWARD, 1000)
+ADDBULLET = pygame.USEREVENT + 4
+pygame.time.set_timer(ADDBULLET, 200)
 
 #创建plaer
 player = Player()
@@ -239,6 +241,12 @@ while running:
 			new_reward = RewardBlood()
 			rewardBloods.add(new_reward)
 			all_sprites.add(new_reward)
+                elif event.type == ADDBULLET:
+                        if (len(bullets) <= 3) and (game_over == False):
+                                new_bullet = Bullet(player.rect[0] + 32, player.rect[1])
+                                bullets.add(new_bullet)
+                                all_sprites.add(new_bullet)
+                                shoot_sound.play()
 
 	screen.blit(background, (0, 0))
 	clouds.update()
@@ -271,7 +279,8 @@ while running:
 	else:
 		current_time = datetime.now()
 
-	score_text = u"Score: %s" % ((current_time - start_time).seconds + player_get_bloods + player_hit_enemies)
+	#score_text = u"Score: %s" % ((current_time - start_time).seconds + player_get_bloods + player_hit_enemies)
+	score_text = u"Score: %s" % (player_get_bloods + player_hit_enemies)
 	show_text(screen, (20, 20), score_text, (0, 0, 255), False, font_size = 28)
 
 	#将两次flip之间的修改更新到整个屏幕
